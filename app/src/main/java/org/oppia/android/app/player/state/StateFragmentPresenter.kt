@@ -29,6 +29,9 @@ import org.oppia.android.app.player.audio.AudioUiManager
 import org.oppia.android.app.player.state.ConfettiConfig.LARGE_CONFETTI_BURST
 import org.oppia.android.app.player.state.ConfettiConfig.MEDIUM_CONFETTI_BURST
 import org.oppia.android.app.player.state.ConfettiConfig.MINI_CONFETTI_BURST
+import org.oppia.android.app.player.state.itemviewmodel.ContentViewModel
+import org.oppia.android.app.player.state.itemviewmodel.FeedbackViewModel
+import org.oppia.android.app.player.state.itemviewmodel.StateItemViewModel
 import org.oppia.android.app.player.state.listener.RouteToHintsAndSolutionListener
 import org.oppia.android.app.player.stopplaying.StopStatePlayingSessionWithSavedProgressListener
 import org.oppia.android.app.topic.conceptcard.ConceptCardFragment.Companion.CONCEPT_CARD_DIALOG_FRAGMENT_TAG
@@ -81,8 +84,10 @@ class StateFragmentPresenter @Inject constructor(
   private lateinit var explorationId: String
   private lateinit var currentStateName: String
   private lateinit var binding: StateFragmentBinding
+  private lateinit var currentHighlightedContentItem: StateItemViewModel
   private lateinit var recyclerViewAdapter: RecyclerView.Adapter<*>
   private lateinit var helpIndex: HelpIndex
+  private lateinit var contentId: String
 
   private val viewModel: StateViewModel by lazy {
     getStateViewModel()
@@ -199,6 +204,34 @@ class StateFragmentPresenter @Inject constructor(
     recyclerViewAssembler.adapter.notifyDataSetChanged()
   }
 
+  fun handleContentCardHighlighting(contentId: String, playing: Boolean) {
+    if (::currentHighlightedContentItem.isInitialized) {
+      if (currentHighlightedContentItem is ContentViewModel && (currentHighlightedContentItem as ContentViewModel).contentId != contentId) {
+        (currentHighlightedContentItem as ContentViewModel).updateIsAudioPlaying(false)
+      } else if (currentHighlightedContentItem is FeedbackViewModel && (currentHighlightedContentItem as FeedbackViewModel).contentId != contentId) {
+        (currentHighlightedContentItem as FeedbackViewModel).updateIsAudioPlaying(false)
+      }
+    }
+    val itemList = viewModel.itemList
+    for (item in itemList) {
+      if (item is ContentViewModel) {
+        if (item.contentId == contentId) {
+          currentHighlightedContentItem = item
+        }
+      } else if (item is FeedbackViewModel) {
+        if (item.contentId == contentId) {
+          currentHighlightedContentItem = item
+        }
+      }
+    }
+    if (::currentHighlightedContentItem.isInitialized && currentHighlightedContentItem is ContentViewModel) {
+      (currentHighlightedContentItem as ContentViewModel).updateIsAudioPlaying(playing)
+    }
+    if (::currentHighlightedContentItem.isInitialized && currentHighlightedContentItem is FeedbackViewModel) {
+      (currentHighlightedContentItem as FeedbackViewModel).updateIsAudioPlaying(playing)
+    }
+  }
+
   fun handleAudioClick() = recyclerViewAssembler.toggleAudioPlaybackState()
 
   fun handleKeyboardAction() {
@@ -311,6 +344,7 @@ class StateFragmentPresenter @Inject constructor(
     showOrHideAudioByState(ephemeralState.state)
 
     val dataPair = recyclerViewAssembler.compute(
+      contentId,
       ephemeralState,
       explorationId,
       shouldSplit

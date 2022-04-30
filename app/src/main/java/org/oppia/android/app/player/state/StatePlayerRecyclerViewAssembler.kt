@@ -159,7 +159,7 @@ class StatePlayerRecyclerViewAssembler private constructor(
    * not retained upon configuration changes since the user can just re-expand the list.
    */
   private var hasPreviousResponsesExpanded: Boolean = false
-
+  private lateinit var contentId: String
   private val lifecycleSafeTimerFactory = LifecycleSafeTimerFactory(backgroundCoroutineDispatcher)
 
   /** The most recent content ID read by the audio system. */
@@ -193,6 +193,7 @@ class StatePlayerRecyclerViewAssembler private constructor(
    * rich-text rendering for this state.
    */
   fun compute(
+    contentId: String,
     ephemeralState: EphemeralState,
     gcsEntityId: String,
     isSplitView: Boolean
@@ -204,7 +205,7 @@ class StatePlayerRecyclerViewAssembler private constructor(
     val conversationPendingItemList = mutableListOf<StateItemViewModel>()
     val extraInteractionPendingItemList = mutableListOf<StateItemViewModel>()
     if (playerFeatureSet.contentSupport) {
-      addContentItem(conversationPendingItemList, ephemeralState, gcsEntityId)
+      addContentItem(contentId, conversationPendingItemList, ephemeralState, gcsEntityId)
     }
     val interaction = ephemeralState.state.interaction
 
@@ -321,6 +322,7 @@ class StatePlayerRecyclerViewAssembler private constructor(
   }
 
   private fun addContentItem(
+    contentId: String,
     pendingItemList: MutableList<StateItemViewModel>,
     ephemeralState: EphemeralState,
     gcsEntityId: String
@@ -331,6 +333,7 @@ class StatePlayerRecyclerViewAssembler private constructor(
       )
     if (contentSubtitledHtml.isNotEmpty()) {
       pendingItemList += ContentViewModel(
+        contentId,
         contentSubtitledHtml,
         gcsEntityId,
         hasConversationView,
@@ -575,6 +578,7 @@ class StatePlayerRecyclerViewAssembler private constructor(
     val feedbackHtml = translationController.extractString(feedback, writtenTranslationContext)
     if (feedbackHtml.isNotEmpty()) {
       return FeedbackViewModel(
+        feedback.contentId,
         feedbackHtml,
         gcsEntityId,
         hasConversationView,

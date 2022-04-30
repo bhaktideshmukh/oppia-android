@@ -7,6 +7,7 @@ import org.oppia.android.app.fragment.FragmentScope
 import org.oppia.android.app.model.State
 import org.oppia.android.app.model.Voiceover
 import org.oppia.android.app.model.VoiceoverMapping
+import org.oppia.android.app.player.state.listener.AudioContentIdListener
 import org.oppia.android.app.viewmodel.ObservableViewModel
 import org.oppia.android.domain.audio.AudioPlayerController
 import org.oppia.android.domain.audio.AudioPlayerController.PlayProgress
@@ -25,6 +26,7 @@ class AudioViewModel @Inject constructor(
 ) : ObservableViewModel() {
 
   private lateinit var state: State
+  private lateinit var contentId: String
   private lateinit var explorationId: String
   private var voiceoverMap = mapOf<String, Voiceover>()
   private val defaultLanguage = "en"
@@ -34,6 +36,8 @@ class AudioViewModel @Inject constructor(
 
   var selectedLanguageCode: String = ""
   var languages = listOf<String>()
+
+  private var audioContentIdListener: AudioContentIdListener? = null
 
   /** Mirrors PlayStatus in AudioPlayerController except adds LOADING state */
   enum class UiAudioPlayStatus {
@@ -119,9 +123,25 @@ class AudioViewModel @Inject constructor(
     } else {
       audioPlayerController.play()
     }
+  } /*
+  fun playAudio() {
+    // Do not auto play audio if the LanguageDialogFragment was shown
+    if (!languageSelectionShown) {
+      audioPlayerController.play()
+      if (audioContentIdListener != null) {
+        audioContentIdListener!!.contentIdForCurrentAudio(contentId, isPlaying = true)
+      }
+    } else {
+      languageSelectionShown = false
+    }
+  }*/
+  // fun pauseAudio() = audioPlayerController.pause()
+  fun pauseAudio() {
+    audioPlayerController.pause()
+    if (audioContentIdListener != null) {
+      audioContentIdListener!!.contentIdForCurrentAudio(contentId, isPlaying = false)
+    }
   }
-
-  fun pauseAudio() = audioPlayerController.pause()
   fun handleSeekTo(position: Int) = audioPlayerController.seekTo(position)
   fun handleRelease() = audioPlayerController.releaseMediaPlayer()
 

@@ -67,6 +67,7 @@ class QuestionPlayerFragmentPresenter @Inject constructor(
   private lateinit var questionId: String
   private lateinit var currentQuestionState: State
   private lateinit var helpIndex: HelpIndex
+  private lateinit var contentId: String
 
   fun handleCreateView(
     inflater: LayoutInflater,
@@ -226,6 +227,7 @@ class QuestionPlayerFragmentPresenter @Inject constructor(
     }
 
     val dataPair = recyclerViewAssembler.compute(
+      contentId,
       ephemeralQuestion.ephemeralState,
       skillId,
       isSplitView
